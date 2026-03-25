@@ -1,0 +1,303 @@
+/* ── Reset base ──────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Variables globales ──────────────────────────────────────
+   Defines los colores UNA sola vez aquí.
+   En cualquier archivo CSS usas var(--nombre).
+   Si quieres cambiar el amarillo, lo cambias solo acá
+   y se actualiza en toda la página. */
+:root {
+  --amarillo:   #FFD700;
+  --amarillo2:  #FFC200;   /* amarillo más cálido para hovers */
+  --negro:      #0a0a0a;
+  --negro2:     #111111;   /* fondo de tarjetas */
+  --negro3:     #1a1a1a;   /* bordes y separadores */
+  --blanco:     #ffffff;
+  --gris:       #999999;   /* texto secundario */
+  --gris2:      #333333;   /* bordes suaves */
+
+  --fuente:     'Segoe UI', system-ui, sans-serif;
+  --max-ancho:  1100px;
+  --radio:      6px;
+}
+
+/* ── Base global ─────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--negro);
+  color: var(--blanco);
+  font-family: var(--fuente);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--negro); }
+::-webkit-scrollbar-thumb { background: var(--gris2); border-radius: 2px; }
+
+/* ── Tipografía base ─────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--blanco);
+}
+
+p { color: var(--gris); }
+
+a {
+  color: var(--amarillo);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ── Clases utilitarias reutilizables ────────────────────────
+   Estas clases las usas en cualquier página con className="..."
+   No las repites en cada componente. */
+
+/* Contenedor centrado con ancho máximo */
+.container {
+  max-width: var(--max-ancho);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Sección con padding vertical estándar */
+.seccion {
+  padding: 80px 24px;
+}
+
+/* Separador entre secciones */
+.seccion-borde {
+  border-bottom: 1px solid var(--negro3);
+}
+
+/* Etiqueta pequeña de categoría */
+.etiqueta {
+  font-size: 11px;
+  color: var(--amarillo);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 12px;
+}
+
+/* Botón primario */
+.btn-primario {
+  display: inline-block;
+  background: var(--amarillo);
+  color: var(--negro);
+  padding: 12px 28px;
+  border-radius: var(--radio);
+  font-weight: 700;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btn-primario:hover {
+  background: var(--amarillo2);
+  text-decoration: none;
+}
+
+/* Botón secundario — contorno */
+.btn-secundario {
+  display: inline-block;
+  background: transparent;
+  color: var(--amarillo);
+  border: 1px solid var(--amarillo);
+  padding: 12px 28px;
+  border-radius: var(--radio);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-secundario:hover {
+  background: var(--amarillo);
+  color: var(--negro);
+  text-decoration: none;
+}
+
+/* Tarjeta base */
+.tarjeta {
+  background: var(--negro2);
+  border: 1px solid var(--negro3);
+  border-radius: var(--radio);
+  padding: 28px;
+  transition: border-color 0.2s;
+}
+
+.tarjeta:hover {
+  border-color: var(--amarillo);
+}
+
+/* Grid responsivo automático */
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+}
+
+/* Texto responsivo para títulos grandes */
+.titulo-hero {
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.titulo-seccion {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 700;
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+/* ── NAVBAR ───────────────────────────────────────────── */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background: rgba(10, 10, 10, 0.9);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--negro3);
+  z-index: 1000;
+}
+
+.navbar-contenido {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+}
+
+/* Logo */
+.logo {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--blanco);
+  letter-spacing: 1px;
+}
+
+/* Links */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav-links a {
+  font-size: 14px;
+  color: var(--gris);
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: var(--amarillo);
+  text-decoration: none;
+}
+
+/* Grid principal */
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 40px;
+  padding: 60px 24px;
+}
+
+/* Títulos */
+.footer-titulo {
+  font-size: 13px;
+  margin-bottom: 14px;
+  color: var(--blanco);
+  position: relative;
+}
+
+/* Línea debajo del título (detalle pro) */
+.footer-titulo::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: var(--amarillo);
+  margin-top: 6px;
+}
+
+/* Links */
+.footer-links {
+  list-style: none;
+}
+
+.footer-links li {
+  margin-bottom: 8px;
+}
+
+.footer-links a {
+  font-size: 14px;
+  color: var(--gris);
+}
+
+.footer-links a:hover {
+  color: var(--amarillo);
+}
+
+/* Redes */
+.footer-social {
+  border-top: 1px solid var(--negro3);
+  padding: 20px 0;
+}
+
+.social-icons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Botones sociales */
+.social-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--negro3);
+  color: var(--blanco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.social-btn:hover {
+  background: var(--amarillo);
+  color: var(--negro);
+}
+
+/* Bottom */
+.footer-bottom {
+  text-align: center;
+  padding: 16px;
+  font-size: 12px;
+  color: var(--gris);
+  border-top: 1px solid var(--negro3);
+}
