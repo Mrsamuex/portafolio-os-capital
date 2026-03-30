@@ -97,7 +97,7 @@ export default function HomeOS() {
             Diagnóstico, digitalización y acompañamiento real.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/contacto" className="btn-primario">
+            <Link to="/contact_os" className="btn-primario">
               Agenda tu diagnóstico gratis →
             </Link>
             <Link to="/servicios" className="btn-secundario">
