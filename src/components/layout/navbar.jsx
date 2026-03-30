@@ -15,9 +15,12 @@ export default function Navbar() {
           <Link to="/servicios">Servicios</Link>
           <Link to="/casos">Casos</Link>
           <Link to="/blog">Blog</Link>
+          <Link to="/test">Test</Link>
           <Link to="/contact_os" className="btn-primario">
             Contacto
           </Link>
+          
+
         </nav>
 
       </div>

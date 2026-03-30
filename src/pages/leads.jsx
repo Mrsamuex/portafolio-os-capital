@@ -1,96 +1,92 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase' // ajusta la ruta si es diferente
 
-// ── Datos de prueba ───────────────────────────────────────
-// Por ahora los leads están hardcodeados aquí.
-// Cuando conectes Supabase, reemplazas LEADS_PRUEBA
-// por un fetch() y useState, igual que en contact_os.jsx
-const LEADS_PRUEBA = [
-  {
-    id: 1,
-    nombre: 'Ana García',
-    email: 'ana@gmail.com',
-    telefono: '+57 310 123 4567',
-    negocio: 'Cafetería Ana',
-    servicio: 'Diagnóstico organizacional',
-    fecha: '2025-03-10',
-    estado: 'nuevo',
-  },
-  {
-    id: 2,
-    nombre: 'Carlos Ruiz',
-    email: 'carlos@outlook.com',
-    telefono: '+57 320 987 6543',
-    negocio: 'Ferretería Ruiz',
-    servicio: 'Control financiero',
-    fecha: '2025-03-12',
-    estado: 'contactado',
-  },
-  {
-    id: 3,
-    nombre: 'María Peña',
-    email: 'maria@gmail.com',
-    telefono: '+57 315 456 7890',
-    negocio: 'Flakuz Peluquería',
-    servicio: 'Digitalización de procesos',
-    fecha: '2025-03-01',
-    estado: 'cerrado',
-  },
-  {
-    id: 4,
-    nombre: 'Luis Torres',
-    email: 'luis@empresa.co',
-    telefono: '+57 300 111 2222',
-    negocio: 'Distribuidora Torres',
-    servicio: 'Diagnóstico organizacional',
-    fecha: '2025-03-15',
-    estado: 'nuevo',
-  },
-]
-
-// ── Configuración de columnas del kanban ──────────────────
-// Si quieres agregar un estado nuevo (ej: 'en_progreso'),
-// solo agregas un objeto aquí — el kanban se actualiza solo
 const COLUMNAS = [
   { id: 'nuevo',      label: 'Nuevos',      color: 'var(--amarillo)' },
   { id: 'contactado', label: 'Contactados', color: '#4da6ff' },
   { id: 'cerrado',    label: 'Cerrados',    color: '#00e5a0' },
 ]
 
-// ── Formatea la fecha de YYYY-MM-DD a "10 mar 2025" ───────
 function formatearFecha(fechaStr) {
   return new Date(fechaStr).toLocaleDateString('es-CO', {
     day: 'numeric', month: 'short', year: 'numeric'
   })
 }
 
-export default function Leads() {
-  // leads → el array completo, con estados actualizables
-  // setLeads → función para modificarlos
-  const [leads, setLeads] = useState(LEADS_PRUEBA)
+// Convierte la fila de Supabase al formato que usa el kanban
+function mapearLead(row) {
+  return {
+    id:       row.id,
+    nombre:   row.name,
+    email:    row.email,
+    telefono: row.phone ?? '—',      // la tabla no tiene phone, queda como fallback
+    negocio:  row.business,
+    servicio: row.service,
+    mensaje:  row.message,
+    fuente:   row.source,
+    fecha:    row.created_at,
+    estado:   row.status ?? 'nuevo', // si llega null, cae en "nuevo"
+  }
+}
 
-  // leadSeleccionado → el lead que se está viendo en detalle
-  // null = ninguno seleccionado = modal cerrado
+export default function Leads() {
+  const [leads, setLeads] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
   const [leadSeleccionado, setLeadSeleccionado] = useState(null)
 
-  // ── Cambia el estado de un lead ───────────────────────
-  // Cuando haces click en un botón de estado dentro de la tarjeta,
-  // este función actualiza solo ese lead en el array
-  const cambiarEstado = (id, nuevoEstado) => {
+  // ── Carga los leads desde Supabase al montar el componente ──
+  useEffect(() => {
+    async function cargarLeads() {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setLeads(data.map(mapearLead))
+      }
+      setCargando(false)
+    }
+    cargarLeads()
+  }, [])
+
+  // ── Cambia estado local Y en Supabase ──────────────────────
+  const cambiarEstado = async (id, nuevoEstado) => {
+    // 1. Actualiza local inmediatamente (UX más ágil)
     setLeads(leads.map(lead =>
-      // Si el id coincide, crea un objeto nuevo con el estado actualizado
-      // Si no coincide, lo deja igual
       lead.id === id ? { ...lead, estado: nuevoEstado } : lead
     ))
-    // Si el lead está abierto en el modal, actualiza el modal también
     if (leadSeleccionado?.id === id) {
       setLeadSeleccionado(prev => ({ ...prev, estado: nuevoEstado }))
     }
+
+    // 2. Persiste en Supabase
+    const { error } = await supabase
+      .from('leads')
+      .update({ status: nuevoEstado })
+      .eq('id', id)
+
+    if (error) console.error('Error actualizando estado:', error.message)
   }
 
-  // ── Filtra leads por columna ───────────────────────────
-  // Para cada columna, devuelve solo los leads de ese estado
   const leadsPorEstado = (estado) =>
     leads.filter(lead => lead.estado === estado)
+
+  // ── Estados de carga/error ─────────────────────────────────
+  if (cargando) return (
+    <div className="seccion">
+      <div className="container" style={{ color: 'var(--gris)' }}>Cargando leads...</div>
+    </div>
+  )
+
+  if (error) return (
+    <div className="seccion">
+      <div className="container" style={{ color: '#ff6b6b' }}>Error: {error}</div>
+    </div>
+  )
 
   return (
     <div>
@@ -104,7 +100,6 @@ export default function Leads() {
               Leads recibidos
             </h1>
           </div>
-          {/* Contador total */}
           <div style={{ display: 'flex', gap: '20px' }}>
             {COLUMNAS.map(col => (
               <div key={col.id} style={{ textAlign: 'center' }}>
@@ -125,17 +120,12 @@ export default function Leads() {
         <div className="container">
           <div style={{
             display: 'grid',
-            // 3 columnas iguales en desktop, 1 en móvil
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '24px',
-            alignItems: 'start', // las columnas no se estiran para igualar altura
+            alignItems: 'start',
           }}>
-
-            {/* Genera una columna por cada estado */}
             {COLUMNAS.map(col => (
               <div key={col.id}>
-
-                {/* ── Encabezado de columna ─────────────── */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: '10px',
                   marginBottom: '16px', paddingBottom: '12px',
@@ -144,7 +134,6 @@ export default function Leads() {
                   <span style={{ fontWeight: '600', color: 'var(--blanco)', fontSize: '15px' }}>
                     {col.label}
                   </span>
-                  {/* Badge con el número de leads en esa columna */}
                   <span style={{
                     background: col.color, color: 'var(--negro)',
                     borderRadius: '20px', padding: '1px 10px',
@@ -154,11 +143,8 @@ export default function Leads() {
                   </span>
                 </div>
 
-                {/* ── Tarjetas de leads ─────────────────── */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
                   {leadsPorEstado(col.id).length === 0 ? (
-                    // Mensaje cuando no hay leads en esa columna
                     <div style={{
                       border: '1px dashed var(--gris2)', borderRadius: 'var(--radio)',
                       padding: '24px', textAlign: 'center',
@@ -172,10 +158,8 @@ export default function Leads() {
                         key={lead.id}
                         className="tarjeta"
                         style={{ cursor: 'pointer' }}
-                        // Click en la tarjeta abre el detalle
                         onClick={() => setLeadSeleccionado(lead)}
                       >
-                        {/* Nombre y negocio */}
                         <div style={{ marginBottom: '10px' }}>
                           <span style={{ fontWeight: '600', color: 'var(--blanco)', fontSize: '15px', display: 'block' }}>
                             {lead.nombre}
@@ -185,7 +169,6 @@ export default function Leads() {
                           </span>
                         </div>
 
-                        {/* Servicio */}
                         <span style={{
                           fontSize: '11px', background: 'var(--negro3)',
                           border: `1px solid ${col.color}33`,
@@ -196,18 +179,14 @@ export default function Leads() {
                           {lead.servicio}
                         </span>
 
-                        {/* Fecha */}
                         <div style={{ fontSize: '12px', color: 'var(--gris)' }}>
                           {formatearFecha(lead.fecha)}
                         </div>
 
-                        {/* Botones para mover el lead a otro estado */}
                         <div style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}
-                          // Evita que el click en los botones abra el modal
                           onClick={e => e.stopPropagation()}
                         >
                           {COLUMNAS
-                            // Solo muestra los botones de los otros estados
                             .filter(c => c.id !== col.id)
                             .map(c => (
                               <button
@@ -241,11 +220,8 @@ export default function Leads() {
         </div>
       </section>
 
-      {/* ── MODAL DE DETALLE ────────────────────────────────
-          Aparece cuando haces click en una tarjeta.
-          leadSeleccionado !== null → modal visible */}
+      {/* ── MODAL DE DETALLE ──────────────────────────────── */}
       {leadSeleccionado && (
-        // Fondo oscuro detrás del modal — click aquí lo cierra
         <div
           onClick={() => setLeadSeleccionado(null)}
           style={{
@@ -255,14 +231,11 @@ export default function Leads() {
             padding: '24px', zIndex: 100,
           }}
         >
-          {/* El modal en sí — e.stopPropagation() evita que el click
-              dentro del modal lo cierre */}
           <div
             className="tarjeta"
             onClick={e => e.stopPropagation()}
             style={{ maxWidth: '480px', width: '100%', position: 'relative' }}
           >
-            {/* Botón cerrar */}
             <button
               onClick={() => setLeadSeleccionado(null)}
               style={{
@@ -278,12 +251,13 @@ export default function Leads() {
               {leadSeleccionado.nombre}
             </h3>
 
-            {/* Todos los datos del lead */}
+            {/* Ahora también muestra mensaje y fuente */}
             {[
               { label: 'Email',    valor: leadSeleccionado.email },
-              { label: 'Teléfono', valor: leadSeleccionado.telefono },
               { label: 'Negocio',  valor: leadSeleccionado.negocio },
               { label: 'Servicio', valor: leadSeleccionado.servicio },
+              { label: 'Mensaje',  valor: leadSeleccionado.mensaje },
+              { label: 'Fuente',   valor: leadSeleccionado.fuente },
               { label: 'Fecha',    valor: formatearFecha(leadSeleccionado.fecha) },
             ].map(item => (
               <div key={item.label} style={{
@@ -300,7 +274,6 @@ export default function Leads() {
               </div>
             ))}
 
-            {/* Cambiar estado desde el modal */}
             <div style={{ marginTop: '20px' }}>
               <span style={{ fontSize: '12px', color: 'var(--gris)', display: 'block', marginBottom: '10px' }}>
                 MOVER A

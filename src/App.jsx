@@ -5,8 +5,9 @@ import Leads from './pages/leads'
 import Servicios from './pages/servicios'
 import Casos from './pages/casos'
 import Blog from './pages/blog'
-import Navbar from './components/navbar'
-import Footer from './components/footer'
+import Navbar from './components/layout/navbar'
+import Footer from './components/layout/footer'
+import TestSupabase from './pages/test'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/servicios" element={<Servicios />} />
         <Route path="/casos" element={<Casos />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/test" element={<TestSupabase />} />
       </Routes>
       <Footer />
     </BrowserRouter>
